@@ -1,1 +1,1 @@
-# haskell-social-network-simulation
+# Haskell Social Network Simulation
