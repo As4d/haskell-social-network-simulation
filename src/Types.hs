@@ -9,7 +9,7 @@ network simulation. It provides thread-safe user representations and immutable
 message structures for communication between user threads.
 -}
 
-module Types where
+module Types(User(..), Message(..)) where
 
 import Control.Concurrent.MVar
 import Data.Time.Clock
