@@ -25,7 +25,9 @@ source-repository head
 
 library
   exposed-modules:
+      Threads
       Types
+      User
       Utils
   other-modules:
       Paths_social_network_simulation
