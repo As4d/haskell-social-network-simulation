@@ -6,11 +6,13 @@
 --
 -- This module defines the behavior of individual user threads in the concurrent
 -- social network simulation. Each user thread operates independently, sending
--- messages to randomly selected recipients at random time intervals.
+-- messages to randomly selected recipients at random time intervals until all
+-- available message slots are claimed.
 module Threads (userThread) where
 
 import Control.Concurrent
-import Control.Monad (forM, when)
+import Control.Concurrent.MVar
+import Control.Monad (when)
 import System.Random
 import Types
 import User
@@ -18,22 +20,26 @@ import Utils
 
 -- | Defines the behavior of a single user thread in the simulation.
 --
--- Each user thread performs the following actions:
+-- Each user thread performs the following actions in a loop:
 --
--- 1. Waits for a random delay between 100ms and 500ms
--- 2. Selects a random recipient from all other users (excluding itself)
--- 3. Sends a message to the selected recipient
---
+-- 1. Atomically claims a message slot from the shared counter
+-- 2. If a slot was successfully claimed, waits for a random delay (100-500ms)
+-- 3. Selects a random recipient from all other users (excluding itself)
+-- 4. Sends a message to the selected recipient
+-- 5. Repeats until no message slots remain
 --
 -- ==== __Parameters__
 --
 -- [@thisUser@] The user represented by this thread
 -- [@allUsers@] List of all users in the simulation (including this user)
+-- [@messagesRemaining@] Shared MVar counter tracking remaining message slots to claim
 --
 -- ==== __Thread Safety__
 --
--- This function is designed to be called concurrently from multiple threads.
--- All message sending operations are thread-safe through the use of MVars
+-- This function uses atomic operations via 'modifyMVar' to prevent race conditions
+-- when claiming message slots. The check-and-decrement operation is performed
+-- atomically, ensuring exactly the target number of messages are sent across all
+-- threads. Message sending operations are also thread-safe through the use of MVars
 -- in the 'sendMessage' function.
 userThread :: User -> [User] -> MVar Int -> IO ()
 userThread thisUser allUsers messagesRemaining = loop
