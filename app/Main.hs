@@ -2,6 +2,7 @@ module Main (main) where
 
 import Control.Concurrent
 import Control.Monad (forM)
+import Control.Monad (forM_)
 import Threads
 import Types
 import User
@@ -15,7 +16,20 @@ main = do
   threadIds <- forM users $ \user -> do
     forkIO (userThread user users)
 
-  -- Wait a bit to see some messages
-  threadDelay 2000000
+  -- Main thread just waits
+  waitUntilDone users 100
+  
+  -- Display results
+  forM_ users $ \user -> do
+      count <- readMVar (messageCount user)
+      putStrLn $ username user ++ " received " ++ show count ++ " messages"
 
-  putStrLn "\nDone for now!"
+waitUntilDone :: [User] -> Int -> IO ()
+waitUntilDone users target = do
+    counts <- mapM (readMVar . messageCount) users
+    let total = sum counts
+    if total < target
+        then do
+            threadDelay 100000
+            waitUntilDone users target
+        else return ()

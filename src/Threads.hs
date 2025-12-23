@@ -10,6 +10,8 @@
 module Threads (userThread) where
 
 import Control.Concurrent
+import Control.Monad (forM)
+import Control.Monad (when)
 import System.Random
 import Types
 import User
@@ -47,4 +49,10 @@ userThread thisUser allUsers = do
   -- Send message
   sendMessage thisUser recipient
 
--- TODO: Loop until 100 messages
+  -- Check total by summing all users
+  allCounts <- mapM (readMVar . messageCount) allUsers
+  let total = sum allCounts
+  
+  -- Loop if under 100
+  when (total < 100) $ 
+      userThread thisUser allUsers
