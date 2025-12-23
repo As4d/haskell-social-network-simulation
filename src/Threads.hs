@@ -10,8 +10,7 @@
 module Threads (userThread) where
 
 import Control.Concurrent
-import Control.Monad (forM)
-import Control.Monad (when)
+import Control.Monad (forM, when)
 import System.Random
 import Types
 import User
@@ -36,23 +35,26 @@ import Utils
 -- This function is designed to be called concurrently from multiple threads.
 -- All message sending operations are thread-safe through the use of MVars
 -- in the 'sendMessage' function.
-userThread :: User -> [User] -> IO ()
-userThread thisUser allUsers = do
-  -- Random delay between 100ms and 500ms
-  delay <- randomRIO (100000, 500000)
-  threadDelay delay
+userThread :: User -> [User] -> MVar Int -> IO ()
+userThread thisUser allUsers messagesRemaining = loop
+  where
+    loop = do
+      -- Atomically claim a message slot
+      canSend <- modifyMVar messagesRemaining $ \remaining -> do
+        if remaining > 0
+          then return (remaining - 1, True) -- Claim slot
+          else return (remaining, False) -- No slots left
+      when canSend $ do
+        -- Random delay between 100ms and 500ms
+        delay <- randomRIO (100000, 500000)
+        threadDelay delay
 
-  -- Select random recipient (excluding self)
-  let otherUsers = filter (\u -> userId u /= userId thisUser) allUsers
-  recipient <- selectRandom otherUsers
+        -- Select random recipient (excluding self)
+        let otherUsers = filter (\u -> userId u /= userId thisUser) allUsers
+        recipient <- selectRandom otherUsers
 
-  -- Send message
-  sendMessage thisUser recipient
+        -- Send message
+        sendMessage thisUser recipient
 
-  -- Check total by summing all users
-  allCounts <- mapM (readMVar . messageCount) allUsers
-  let total = sum allCounts
-  
-  -- Loop if under 100
-  when (total < 100) $ 
-      userThread thisUser allUsers
+        -- Loop to claim another slot
+        loop

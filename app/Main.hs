@@ -1,8 +1,7 @@
 module Main (main) where
 
 import Control.Concurrent
-import Control.Monad (forM)
-import Control.Monad (forM_)
+import Control.Monad (forM, forM_)
 import Threads
 import Types
 import User
@@ -12,24 +11,26 @@ main = do
   putStrLn "Creating 10 users..."
   users <- forM [1 .. 10] createUser
 
+  -- Create counter starting at 100
+  messagesRemaining <- newMVar 100
+
   putStrLn "Spawning threads...\n"
   threadIds <- forM users $ \user -> do
-    forkIO (userThread user users)
+    forkIO (userThread user users messagesRemaining)
 
-  -- Main thread just waits
-  waitUntilDone users 100
-  
+  -- Wait until counter reaches 0
+  waitUntilZero messagesRemaining
+
   -- Display results
   forM_ users $ \user -> do
-      count <- readMVar (messageCount user)
-      putStrLn $ username user ++ " received " ++ show count ++ " messages"
+    count <- readMVar (messageCount user)
+    putStrLn $ username user ++ " received " ++ show count ++ " messages"
 
-waitUntilDone :: [User] -> Int -> IO ()
-waitUntilDone users target = do
-    counts <- mapM (readMVar . messageCount) users
-    let total = sum counts
-    if total < target
-        then do
-            threadDelay 100000
-            waitUntilDone users target
-        else return ()
+waitUntilZero :: MVar Int -> IO ()
+waitUntilZero counter = do
+  remaining <- readMVar counter
+  if remaining > 0
+    then do
+      threadDelay 100000
+      waitUntilZero counter
+    else return ()
