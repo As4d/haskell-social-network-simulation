@@ -21,6 +21,9 @@ main = do
   -- Wait until counter reaches 0
   waitUntilZero messagesRemaining
 
+  -- Give threads time to finish
+  threadDelay 500000
+
   -- Display results
   forM_ users $ \user -> do
     count <- readMVar (messageCount user)
