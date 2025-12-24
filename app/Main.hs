@@ -1,7 +1,6 @@
 module Main (main) where
 
 import Control.Concurrent
-import Control.Concurrent.MVar
 import Control.Monad (forM, forM_)
 import Data.List (sortBy)
 import Data.Ord (comparing)
