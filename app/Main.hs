@@ -1,7 +1,7 @@
 module Main (main) where
 
 import Control.Concurrent
-import Control.Monad (forM, forM_)
+import Control.Monad (forM, forM_, when)
 import Data.List (sortBy)
 import Data.Ord (comparing)
 import Data.Time.Format
@@ -46,11 +46,9 @@ main = do
 waitUntilZero :: MVar Int -> IO ()
 waitUntilZero counter = do
   remaining <- readMVar counter
-  if remaining > 0
-    then do
-      threadDelay 100000
-      waitUntilZero counter
-    else return ()
+  when (remaining > 0) $ do
+    threadDelay 100000
+    waitUntilZero counter
 
 exportMessageLog :: MVar [Message] -> IO ()
 exportMessageLog logMVar = do
