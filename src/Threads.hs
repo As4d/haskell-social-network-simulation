@@ -11,7 +11,6 @@
 module Threads (userThread) where
 
 import Control.Concurrent
-import Control.Concurrent.MVar
 import Control.Monad (when)
 import System.Random
 import Types
