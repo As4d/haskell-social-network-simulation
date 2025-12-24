@@ -61,8 +61,8 @@ createUser uid = do
 --
 -- [@sender@] The user sending the message
 -- [@recipient@] The user receiving the message
-sendMessage :: User -> User -> IO ()
-sendMessage sender recipient = do
+sendMessage :: User -> User -> MVar [Message] -> IO ()
+sendMessage sender recipient messageLog = do
   -- Get random message content
   msgContent <- getRandomMessage
 
@@ -81,5 +81,8 @@ sendMessage sender recipient = do
 
   -- Increment recipient's message count (thread-safe)
   modifyMVar_ (messageCount recipient) $ \count -> return (count + 1)
+
+  -- Log the message (thread-safe)
+  modifyMVar_ messageLog $ \logs -> return (msg : logs)
 
   putStrLn $ username sender ++ " sent message to " ++ username recipient

@@ -41,8 +41,8 @@ import Utils
 -- atomically, ensuring exactly the target number of messages are sent across all
 -- threads. Message sending operations are also thread-safe through the use of MVars
 -- in the 'sendMessage' function.
-userThread :: User -> [User] -> MVar Int -> IO ()
-userThread thisUser allUsers messagesRemaining = loop
+userThread :: User -> [User] -> MVar Int -> MVar [Message] -> IO ()
+userThread thisUser allUsers messagesRemaining messageLog = loop
   where
     loop = do
       -- Atomically claim a message slot
@@ -60,7 +60,7 @@ userThread thisUser allUsers messagesRemaining = loop
         recipient <- selectRandom otherUsers
 
         -- Send message
-        sendMessage thisUser recipient
+        sendMessage thisUser recipient messageLog
 
         -- Loop to claim another slot
         loop
