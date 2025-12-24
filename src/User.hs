@@ -59,10 +59,10 @@ createUser uid = do
 --
 -- ==== __Parameters__
 --
--- [@sender@] The user sending the message
--- [@recipient@] The user receiving the message
+-- [@fromUser@] The user sending the message
+-- [@toUser@] The user receiving the message
 sendMessage :: User -> User -> MVar [Message] -> IO ()
-sendMessage sender recipient messageLog = do
+sendMessage fromUser toUser messageLog = do
   -- Get random message content
   msgContent <- getRandomMessage
 
@@ -70,19 +70,19 @@ sendMessage sender recipient messageLog = do
   currentTime <- getCurrentTime
   let msg =
         Message
-          { sender = username sender,
-            recipient = username recipient,
+          { sender = username fromUser,
+            recipient = username toUser,
             content = msgContent,
             timestamp = currentTime
           }
 
   -- Add message to recipient's inbox (thread-safe)
-  modifyMVar_ (inbox recipient) $ \msgs -> return (msg : msgs)
+  modifyMVar_ (inbox toUser) $ \msgs -> return (msg : msgs)
 
   -- Increment recipient's message count (thread-safe)
-  modifyMVar_ (messageCount recipient) $ \count -> return (count + 1)
+  modifyMVar_ (messageCount toUser) $ \count -> return (count + 1)
 
   -- Log the message (thread-safe)
   modifyMVar_ messageLog $ \logs -> return (msg : logs)
 
-  putStrLn $ username sender ++ " sent message to " ++ username recipient
+  putStrLn $ username fromUser ++ " sent message to " ++ username toUser
