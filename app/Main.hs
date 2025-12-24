@@ -22,7 +22,7 @@ main = do
   messageLog <- newMVar []
 
   putStrLn "Spawning threads...\n"
-  threadIds <- forM users $ \user -> do
+  forM_ users $ \user -> do
     forkIO (userThread user users messagesRemaining messageLog)
 
   -- Wait until counter reaches 0
