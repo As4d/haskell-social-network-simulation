@@ -56,10 +56,10 @@ userThread thisUser allUsers messagesRemaining messageLog = loop
 
         -- Select random recipient (excluding self)
         let otherUsers = filter (\u -> userId u /= userId thisUser) allUsers
-        recipient <- selectRandom otherUsers
+        selectedRecipient <- selectRandom otherUsers
 
         -- Send message
-        sendMessage thisUser recipient messageLog
+        sendMessage thisUser selectedRecipient messageLog
 
         -- Loop to claim another slot
         loop
