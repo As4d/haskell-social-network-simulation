@@ -62,7 +62,7 @@ exportMessageLog logMVar = do
 
 formatMessage :: Message -> String
 formatMessage msg =
-  formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" (timestamp msg)
+  formatTime defaultTimeLocale "%d-%m-%Y %H:%M:%S" (timestamp msg)
     ++ " | "
     ++ sender msg
     ++ " -> "
